@@ -37,3 +37,6 @@ def file_picked():
     print("Opening {}".format(filename))
 
     return jsonify(data)
+
+if __name__ == "__main__":
+    app.run()
