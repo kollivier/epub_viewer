@@ -53,6 +53,7 @@ def get_epub_file(filename):
 def dir_listing():
     all_files = os.listdir(epubsdir)
     all_files.sort(key=lambda x: os.path.getmtime(os.path.join(epubsdir, x)))
+    all_files.reverse()
     files = [afile for afile in all_files if is_visible(afile)]
     data = {
         'dirname': epubsdir,
