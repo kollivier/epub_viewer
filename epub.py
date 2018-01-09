@@ -72,7 +72,11 @@ class EPub:
         return self.toc_filename
 
     def read_toc(self):
+        # FIXME: We should read META-INF/container.xml and the content.opf
+        # file to determine the actual filename and path for the TOC
         toc_file = os.path.join(self.epub_dir, 'OEBPS', 'toc.ncx')
+        if not os.path.exists(toc_file):
+            toc_file = os.path.join(self.epub_dir, 'toc.ncx')
         root = ET.parse(toc_file)
         nav_map = root.find('ncx:navMap', ns)
         if nav_map:
