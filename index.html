@@ -2,6 +2,7 @@
 <head>
     <script>
         var server_url = "http://127.0.0.1:5000";
+        var fileListing = [];
         function callPython(methodName, data, callback) {
             var xmlhttp = new XMLHttpRequest();
             xmlhttp.onreadystatechange = function() {
@@ -22,14 +23,45 @@
             if (dir) {
                 dir.innerText = "Directory: " + data['dirname'];
             }
-            var files = document.getElementById("files");
-            for (var i = 0; i < data["files"].length; i++) {
-                var opt = data["files"][i];
+            fileListing = data["files"];
+            loadFilesIntoSelect(fileListing);
+        }
+
+        function loadFilesIntoSelect(files) {
+            var filesElement = document.getElementById("files");
+
+            // remove the existing values, if any
+            for(var j = filesElement.options.length - 1 ; j >= 0 ; j--)
+            {
+                filesElement.remove(j);
+            }
+
+            for (var i = 0; i < files.length; i++) {
+                var opt = files[i];
                 var el = document.createElement("option");
                 el.textContent = opt;
                 el.value = opt;
-                files.appendChild(el);
+                filesElement.appendChild(el);
             }
+        }
+
+        function filterFiles(filterText) {
+            if (filterText.length === 0) {
+                loadFilesIntoSelect(fileListing);
+                return;
+            }
+
+            var filteredFiles = [];
+            var searchRegex = new RegExp(filterText, "i");
+            for (var i = 0; i < fileListing.length; i++) {
+                var filename = fileListing[i];
+                var result = filename.search(searchRegex);
+                if (result !== -1) {
+                    filteredFiles.push(filename);
+                }
+            }
+
+            loadFilesIntoSelect(filteredFiles);
         }
 
         function loadEPub(data) {
@@ -39,7 +71,7 @@
 </head>
 <body onload="javascript:callPython('getFilesInEpubsDir', null, loadDirectory);">
     <p id="directory">Directory: </p>
-    <p>Files: </p>
+    <p>Files: <input type="text" id="filter" value="" oninput="javascript:filterFiles(this.value)"/></p>
     <select id="files" size="10" onchange="javascript:callPython('openEPub', {filename: this.value}, loadEPub)">
 
     </select>

@@ -12,6 +12,11 @@ current_epub = None
 import epub
 
 
+def is_visible(filepath):
+    name = os.path.basename(os.path.abspath(filepath))
+    return not name.startswith('.')
+
+
 @app.after_request
 def after_request(response):
     """
@@ -43,11 +48,15 @@ def get_epub_file(filename):
     else:
         abort(404)
 
+
 @app.route('/getFilesInEpubsDir', methods=['GET'])
 def dir_listing():
+    all_files = os.listdir(epubsdir)
+    all_files.sort(key=lambda x: os.path.getmtime(os.path.join(epubsdir, x)))
+    files = [afile for afile in all_files if is_visible(afile)]
     data = {
         'dirname': epubsdir,
-        'files': os.listdir(epubsdir)
+        'files': files
     }
 
     print("Sending data: {}".format(data))
