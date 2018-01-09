@@ -1,6 +1,7 @@
 <html>
 <head>
     <script>
+        var server_url = "http://127.0.0.1:5000";
         function callPython(methodName, data, callback) {
             var xmlhttp = new XMLHttpRequest();
             xmlhttp.onreadystatechange = function() {
@@ -12,7 +13,7 @@
             if (data) {
                 methodType = "POST";
             }
-            xmlhttp.open(methodType, "http://127.0.0.1:5000/" + methodName, true);
+            xmlhttp.open(methodType, server_url + "/" + methodName, true);
             xmlhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
             xmlhttp.send(JSON.stringify(data));
         }
@@ -30,12 +31,16 @@
                 files.appendChild(el);
             }
         }
+
+        function loadEPub(data) {
+            window.location.href = server_url + data['toc'];
+        }
     </script>
 </head>
 <body onload="javascript:callPython('getFilesInEpubsDir', null, loadDirectory);">
     <p id="directory">Directory: </p>
     <p>Files: </p>
-    <select id="files" size="10" onchange="javascript:callPython('selectFile', {filename: this.value})">
+    <select id="files" size="10" onchange="javascript:callPython('openEPub', {filename: this.value}, loadEPub)">
 
     </select>
 </body>
