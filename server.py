@@ -52,9 +52,12 @@ def get_epub_file(filename):
 @app.route('/getFilesInEpubsDir', methods=['GET'])
 def dir_listing():
     all_files = os.listdir(epubsdir)
+    print("All files = {}".format(all_files))
     all_files.sort(key=lambda x: os.path.getmtime(os.path.join(epubsdir, x)))
     all_files.reverse()
+    print("All files after sorting and reversing = {}".format(all_files))
     files = [afile for afile in all_files if is_visible(afile)]
+    print("files after reversing and removing hidden files = {}".format(files))
     data = {
         'dirname': epubsdir,
         'files': files
