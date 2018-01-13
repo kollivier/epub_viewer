@@ -1,8 +1,12 @@
 <html>
 <head>
+    <link rel="stylesheet" href="css/bootstrap.css"/>
+    <script src="js/jquery-3.2.1.js"></script>
     <script>
         var server_url = "http://127.0.0.1:5000";
         var fileListing = [];
+        var currentSubdir = '';
+        var dirTree = {};
         function callPython(methodName, data, callback) {
             var xmlhttp = new XMLHttpRequest();
             xmlhttp.onreadystatechange = function() {
@@ -23,8 +27,38 @@
             if (dir) {
                 dir.innerText = "Directory: " + data['dirname'];
             }
-            fileListing = data["files"];
-            loadFilesIntoSelect(fileListing);
+            dirTree = data['dir_tree'];
+            loadTOC(data["dir_list"])
+            currentSubdir = '';
+            loadSubdirIntoSelect(currentSubdir);
+        }
+
+        function loadTOC(dirs) {
+            var tocHtml = '';
+            console.log("dirs = " + JSON.stringify(dirs));
+            var indent = 0;
+            for (var i = 0; i < dirs.length; i++) {
+                var dirName = dirs[i];
+                if (dirName === '') {
+                    dirName = "epubs";
+                    indent = 0;
+                } else {
+                    indent = 1;
+                    var slashes = dirName.match(/\//g);
+                    if (slashes) {
+                        indent += slashes.length;
+                    }
+                }
+                for (var j = 0; j < indent; j++) {
+                    dirName = "&nbsp;&nbsp;" + dirName;
+                }
+                tocHtml += '<a class="nav-link" onclick="javascript:loadSubdirIntoSelect(\'' + dirs[i] + '\');">' + dirName + ' <span class="badge badge-pill badge-info">' + dirTree[dirs[i]].length + '</span></a>';
+            }
+            $('#main_navbar').html(tocHtml);
+        }
+
+        function loadSubdirIntoSelect(subdir) {
+            loadFilesIntoSelect(dirTree[subdir]);
         }
 
         function loadFilesIntoSelect(files) {
@@ -39,7 +73,7 @@
             for (var i = 0; i < files.length; i++) {
                 var opt = files[i];
                 var el = document.createElement("option");
-                el.textContent = opt;
+                el.textContent = opt.split(/[/]/).pop();
                 el.value = opt;
                 filesElement.appendChild(el);
             }
@@ -47,14 +81,14 @@
 
         function filterFiles(filterText) {
             if (filterText.length === 0) {
-                loadFilesIntoSelect(fileListing);
+                loadSubdirIntoSelect(currentSubdir);
                 return;
             }
 
             var filteredFiles = [];
             var searchRegex = new RegExp(filterText, "i");
-            for (var i = 0; i < fileListing.length; i++) {
-                var filename = fileListing[i];
+            for (var i = 0; i < dirTree[currentSubdir].length; i++) {
+                var filename = dirTree[currentSubdir][i].split(/[/]/).pop();
                 var result = filename.search(searchRegex);
                 if (result !== -1) {
                     filteredFiles.push(filename);
@@ -70,9 +104,21 @@
     </script>
 </head>
 <body onload="javascript:callPython('getFilesInEpubsDir', null, loadDirectory);">
-    <p id="directory">Directory: </p>
-    <p>Files: <input type="text" id="filter" value="" oninput="javascript:filterFiles(this.value)"/></p>
-    <select id="files" size="10" onchange="javascript:callPython('openEPub', {filename: this.value}, loadEPub)">
+    <div class="row">
+        <div class="col-md-4">
+          <h3>Directories</h3>
+          <ul id="main_navbar" class="nav nav-tabs nav-stacked flex-column">
+          </ul>
+        </div>
 
-    </select>
+        <div class="col-md-8">
+            <label for="filter">Search</label>
+            <input type="text" id="filter" class="form-control" value="" oninput="javascript:filterFiles(this.value)"/>
+
+            <label for="files">Files</label>
+            <select id="files" size="10" class="form-control" onchange="javascript:callPython('openEPub', {filename: this.value}, loadEPub)">
+
+        </select>
+        </div>
+    </div>
 </body>

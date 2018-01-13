@@ -29,38 +29,41 @@ def after_request(response):
     return response
 
 
-@app.route('/epub/<subdir>/<path:filename>', methods=['GET'])
-def get_epub_subdir_file(subdir, filename):
-    path = os.path.join(current_epub.epub_dir, 'OEBPS', subdir, filename)
-    if os.path.exists(path):
-        return open(path, 'rb').read()
-    else:
-        abort(404)
-
-
 @app.route('/epub/<path:filename>', methods=['GET'])
 def get_epub_file(filename):
     path = os.path.join(current_epub.epub_dir, filename)
     if not os.path.exists(path):
         path = os.path.join(current_epub.epub_dir, 'OEBPS', filename)
     if os.path.exists(path):
-        return open(path, 'rb').read()
+        resp = app.make_response(open(path, 'rb').read())
+        if filename.endswith(".css"):
+            resp.mimetype = "text/css"
+        return resp
     else:
         abort(404)
 
 
 @app.route('/getFilesInEpubsDir', methods=['GET'])
 def dir_listing():
-    all_files = os.listdir(epubsdir)
-    print("All files = {}".format(all_files))
-    all_files.sort(key=lambda x: os.path.getmtime(os.path.join(epubsdir, x)))
-    all_files.reverse()
-    print("All files after sorting and reversing = {}".format(all_files))
-    files = [afile for afile in all_files if is_visible(afile)]
-    print("files after reversing and removing hidden files = {}".format(files))
+    dir_tree = {}
+    for root, dirs, files in os.walk(epubsdir):
+        for afile in files:
+            fullpath = os.path.join(root, afile)
+            subdir = os.path.dirname(fullpath.replace(epubsdir + '/', ''))
+            # epubs can be unzipped directories that have folders ending in .epub too
+            if is_visible(fullpath) and fullpath.endswith(".epub"):
+                if not subdir in dir_tree:
+                    dir_tree[subdir] = []
+                dir_tree[subdir].append(fullpath)
+    for subdir in dir_tree:
+        dir_tree[subdir].sort(key=lambda x: os.path.getmtime(x))
+    print("All files = {}".format(dir_tree))
+    dir_list = list(dir_tree.keys())
+    dir_list.sort()
     data = {
         'dirname': epubsdir,
-        'files': files
+        'dir_list': dir_list,  # just for convenience
+        'dir_tree': dir_tree
     }
 
     print("Sending data: {}".format(data))
