@@ -1,9 +1,12 @@
+from __future__ import unicode_literals
 
 
 def create_html_page(content):
     html = """
 <html>
-<head></head>
+<head>
+    <meta charset="utf-8" />
+</head>
 <body>
     {}
 </body>
