@@ -20,7 +20,7 @@ class Page:
 
     def load_page(self):
         label_ncx = self.nav_point.find('ncx:navLabel', ns)
-        if label_ncx:
+        if label_ncx is not None:
             text_ncx = label_ncx.find('ncx:text', ns)
             if text_ncx is not None:
                 self.label = text_ncx.text
@@ -65,8 +65,8 @@ class EPub:
         html = html_converter.create_html_page(toc_html)
         assert not os.path.exists(self.toc_filename)
 
-        f = open(self.toc_filename, 'w')
-        f.write(html)
+        f = open(self.toc_filename, 'wb')
+        f.write(html.encode('utf-8'))
         f.close()
 
         return self.toc_filename
@@ -79,7 +79,7 @@ class EPub:
             toc_file = os.path.join(self.epub_dir, 'toc.ncx')
         root = ET.parse(toc_file)
         nav_map = root.find('ncx:navMap', ns)
-        if nav_map:
+        if nav_map is not None:
             nav_points = nav_map.findall('ncx:navPoint', ns)
             for np in nav_points:
                 page = Page(np)
