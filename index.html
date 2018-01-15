@@ -1,7 +1,19 @@
 <html>
 <head>
     <link rel="stylesheet" href="css/bootstrap.css"/>
+    <link rel="stylesheet" href="css/bootstrap-treeview.min.css"/>
     <script src="js/jquery-3.2.1.js"></script>
+    <script src="js/bootstrap-treeview.min.js"></script>
+    <style type="text/css">
+    ul {
+        list-style: none;
+    }
+    .vertical-align {
+        display: inline-block;
+        vertical-align: middle;
+        float: none;
+    }
+    </style>
     <script>
         var server_url = "http://127.0.0.1:5000";
         var fileListing = [];
@@ -36,25 +48,53 @@
         function loadTOC(dirs) {
             var tocHtml = '';
             console.log("dirs = " + JSON.stringify(dirs));
-            var indent = 0;
+            var depth = 0;
+            var tree = [];
+            var parentNodes = [];
+
             for (var i = 0; i < dirs.length; i++) {
-                var dirName = dirs[i];
+                var dirName = subdir = dirs[i];
+                var thisDepth = 1;
                 if (dirName === '') {
-                    dirName = "epubs";
-                    indent = 0;
+                    dirName = "All";
                 } else {
-                    indent = 1;
                     var slashes = dirName.match(/\//g);
                     if (slashes) {
-                        indent += slashes.length;
+                        thisDepth += slashes.length;
                     }
+                    dirName = dirName.split("/").pop();
                 }
-                for (var j = 0; j < indent; j++) {
-                    dirName = "&nbsp;&nbsp;" + dirName;
+
+                var thisNode = {
+                    text: dirName,
+                    tags: [dirTree[subdir].length],
+                    subdir: subdir
+                };
+
+                if (parentNodes.length > 0) {
+                    var parentNode = parentNodes[parentNodes.length-1];
+                    if (!parentNode.nodes) {
+                        parentNode.nodes = [];
+                    }
+                    parentNode.nodes.push(thisNode);
+                } else {
+                    tree.push(thisNode);
+                    parentNodes.push(thisNode);
                 }
-                tocHtml += '<a class="nav-link" onclick="javascript:loadSubdirIntoSelect(\'' + dirs[i] + '\');">' + dirName + ' <span class="badge badge-pill badge-info">' + dirTree[dirs[i]].length + '</span></a>';
+
+                if (thisDepth > depth) {
+                    parentNodes.push(thisNode);
+                } else if (thisDepth < depth) {
+                    parentNodes.pop();
+                }
             }
-            $('#main_navbar').html(tocHtml);
+
+            $('#tree').treeview({data: tree, showTags: true});
+            $('#tree').treeview('collapseAll', { silent: true });
+            console.log("Tree = " + JSON.stringify(tree));
+            $('#tree').on('nodeSelected', function(event, data) {
+              loadSubdirIntoSelect(data.subdir);
+            });
         }
 
         function loadSubdirIntoSelect(subdir) {
@@ -76,6 +116,18 @@
                 el.textContent = opt.split(/[/]/).pop();
                 el.value = opt;
                 filesElement.appendChild(el);
+            }
+        }
+
+        function filterDirs(filterText) {
+            if (filterText.length > 0) {
+                $("#tree").treeview('search', [filterText, {
+                    ignoreCase: true,     // case insensitive
+                    exactMatch: false,    // like or equals
+                    revealResults: true,
+                }]);
+            } else {
+                $("#tree").treeview('clearSearch');
             }
         }
 
@@ -106,19 +158,27 @@
 <body onload="javascript:callPython('getFilesInEpubsDir', null, loadDirectory);">
     <div class="row">
         <div class="col-md-4">
-          <h3>Directories</h3>
-          <ul id="main_navbar" class="nav nav-tabs nav-stacked flex-column">
-          </ul>
+            <label for="dirFilter">Filter</label>
+            <input type="text" id="dirFilter" class="form-control" value="" oninput="javascript:filterDirs(this.value)"/>
         </div>
 
         <div class="col-md-8">
-            <label for="filter">Search</label>
+            <label for="filter">Filter</label>
             <input type="text" id="filter" class="form-control" value="" oninput="javascript:filterFiles(this.value)"/>
+        </div>
+    </div>
 
+    <div class="row">
+        <div class="col-md-4">
+            <label for="tree">Categories</label>
+            <div id="tree"></div>   
+        </div>
+
+        <div class="col-md-8">
             <label for="files">Files</label>
             <select id="files" size="10" class="form-control" onchange="javascript:callPython('openEPub', {filename: this.value}, loadEPub)">
 
-        </select>
+            </select>
         </div>
     </div>
 </body>
