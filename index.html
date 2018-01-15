@@ -91,8 +91,8 @@
 
             $('#tree').treeview({data: tree, showTags: true});
             $('#tree').treeview('collapseAll', { silent: true });
-            console.log("Tree = " + JSON.stringify(tree));
             $('#tree').on('nodeSelected', function(event, data) {
+              currentSubdir = data.subdir;
               loadSubdirIntoSelect(data.subdir);
             });
         }
