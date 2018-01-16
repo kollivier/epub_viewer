@@ -47,7 +47,7 @@ def get_epub_file(filename):
 def dir_listing():
     dir_tree = {}
     for root, dirs, files in os.walk(epubsdir):
-        for afile in files:
+        for afile in files + dirs:
             fullpath = os.path.join(root, afile)
             subdir = os.path.dirname(fullpath.replace(epubsdir + '/', ''))
             # epubs can be unzipped directories that have folders ending in .epub too
