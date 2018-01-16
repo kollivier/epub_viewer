@@ -50,6 +50,10 @@ def dir_listing():
         for afile in files + dirs:
             fullpath = os.path.join(root, afile)
             subdir = os.path.dirname(fullpath.replace(epubsdir + '/', ''))
+            # we need to add the root even if it doesn't have any epubs
+            # in order to ensure tree traversal.
+            if subdir == '':
+                dir_tree[subdir] = []
             # epubs can be unzipped directories that have folders ending in .epub too
             if is_visible(fullpath) and fullpath.endswith(".epub"):
                 if not subdir in dir_tree:
