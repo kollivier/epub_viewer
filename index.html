@@ -51,6 +51,7 @@
             var depth = 0;
             var tree = [];
             var parentNodes = [];
+            var previousNode = null;
 
             for (var i = 0; i < dirs.length; i++) {
                 var dirName = subdir = dirs[i];
@@ -58,7 +59,8 @@
                 if (dirName === '') {
                     dirName = "All";
                 } else {
-                    var slashes = dirName.match(/\//g);
+                    thisDepth = 1;
+                    var slashes = subdir.match(/\//g);
                     if (slashes) {
                         thisDepth += slashes.length;
                     }
@@ -71,6 +73,14 @@
                     subdir: subdir
                 };
 
+                // if we're a level deeper, that means the previous node
+                // is this node's parent, so add it to the parentNodes stack.
+                if (thisDepth > depth && previousNode) {
+                    parentNodes.push(previousNode);
+                } else if (thisDepth < depth) {
+                    parentNodes.pop();
+                }
+
                 if (parentNodes.length > 0) {
                     var parentNode = parentNodes[parentNodes.length-1];
                     if (!parentNode.nodes) {
@@ -82,11 +92,8 @@
                     parentNodes.push(thisNode);
                 }
 
-                if (thisDepth > depth) {
-                    parentNodes.push(thisNode);
-                } else if (thisDepth < depth) {
-                    parentNodes.pop();
-                }
+                previousNode = thisNode;
+                depth = thisDepth;
             }
 
             $('#tree').treeview({data: tree, showTags: true});
