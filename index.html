@@ -47,8 +47,6 @@
             }
             dirTree = data['dir_tree'];
             loadTOC(data["dir_list"])
-            currentSubdir = '';
-            loadSubdirIntoSelect(currentSubdir);
         }
 
         function loadTOC(dirs) {
@@ -101,7 +99,6 @@
                     parentNode.nodes.push(thisNode);
                 } else {
                     tree.push(thisNode);
-                    parentNodes.push(thisNode);
                 }
 
                 previousNode = thisNode;
