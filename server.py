@@ -52,8 +52,14 @@ def dir_listing():
             subdir = os.path.dirname(fullpath.replace(epubsdir + '/', ''))
             # epubs can be unzipped directories that have folders ending in .epub too
             if is_visible(fullpath) and fullpath.endswith(".epub"):
-                if not subdir in dir_tree:
-                    dir_tree[subdir] = []
+                dirs = []
+                # if a child directory has an epub, make sure any parents get
+                # added to the dir tree, even if they don't have epubs in them
+                for adir in subdir.split('/'):
+                    dirs.append(adir)
+                    intermediate_dir = '/'.join(dirs)
+                    if not intermediate_dir in dir_tree:
+                        dir_tree[intermediate_dir] = []
                 dir_tree[subdir].append(fullpath)
     for subdir in dir_tree:
         dir_tree[subdir].sort(key=lambda x: os.path.getmtime(x))

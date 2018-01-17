@@ -69,10 +69,12 @@
             var previousNode = null;
 
             for (var i = 0; i < dirs.length; i++) {
+                var expanded = false;
                 var dirName = subdir = dirs[i];
                 var thisDepth = 1;
                 if (dirName === '') {
                     dirName = "All";
+                    expanded = true;
                 } else {
                     thisDepth = 1;
                     var slashes = subdir.match(/\//g);
@@ -82,8 +84,7 @@
                     dirName = dirName.split("/").pop();
                 }
 
-                var expanded = false;
-                if (expandPattern) {
+                if (expandPattern && !expanded) {
                     var searchRegex = new RegExp(expandPattern, "i");
                     if (dirName.search(searchRegex) != -1) {
                         expanded = true;
@@ -117,6 +118,7 @@
                     parentNode.nodes.push(thisNode);
                 } else {
                     tree.push(thisNode);
+                    parentNodes.push(thisNode);
                 }
 
                 previousNode = thisNode;
@@ -124,9 +126,6 @@
             }
 
             $('#tree').treeview({data: tree, showTags: true});
-            if (!expandPattern) {
-                $('#tree').treeview('collapseAll', { silent: true });
-            }
             $('#tree').on('nodeSelected', function(event, data) {
               currentSubdir = data.subdir;
               loadSubdirIntoSelect(data.subdir);
