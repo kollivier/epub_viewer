@@ -25,6 +25,7 @@
         var fileListing = [];
         var currentSubdir = '';
         var dirTree = {};
+        var dirList = [];
         function callPython(methodName, data, callback) {
             var xmlhttp = new XMLHttpRequest();
             xmlhttp.onreadystatechange = function() {
@@ -46,10 +47,20 @@
                 dir.innerText = "Directory: " + data['dirname'];
             }
             dirTree = data['dir_tree'];
-            loadTOC(data["dir_list"])
+            dirList = data['dir_list'];
+            var dirFilter = $('#dirFilter').val();
+            if (dirFilter) {
+                filterDirs(dirFilter);
+            } else {
+                loadTOC(dirList);
+            }
+            var fileFilter = $('#filter').val();
+            if (fileFilter) {
+                filterFiles(fileFilter);
+            }
         }
 
-        function loadTOC(dirs) {
+        function loadTOC(dirs, expandPattern) {
             var tocHtml = '';
             console.log("dirs = " + JSON.stringify(dirs));
             var depth = 0;
@@ -71,20 +82,28 @@
                     dirName = dirName.split("/").pop();
                 }
 
+                var expanded = false;
+                if (expandPattern) {
+                    var searchRegex = new RegExp(expandPattern, "i");
+                    if (dirName.search(searchRegex) != -1) {
+                        expanded = true;
+                    }
+                }
                 var thisNode = {
                     text: dirName,
                     tags: [dirTree[subdir].length],
+                    state: {
+                        checked: false,
+                        disabled: false,
+                        expanded: expanded,
+                        selected: false
+                    },
                     subdir: subdir
                 };
-
-                console.log("subdir = " + subdir);
 
                 // if we're a level deeper, that means the previous node
                 // is this node's parent, so add it to the parentNodes stack.
                 if (thisDepth > depth && previousNode) {
-                    console.log("This is a subdir of the previous node, " + previousNode.text);
-                    console.log("subdir = " + subdir);
-                    console.log("thisDepth = " + thisDepth, ", previousDepth = " + depth);
                     parentNodes.push(previousNode);
                 } else if (thisDepth < depth) {
                     parentNodes.pop();
@@ -92,7 +111,6 @@
 
                 if (parentNodes.length > 0) {
                     var parentNode = parentNodes[parentNodes.length-1];
-                    console.log("Adding to parent node " + parentNode.text);
                     if (!parentNode.nodes) {
                         parentNode.nodes = [];
                     }
@@ -105,9 +123,10 @@
                 depth = thisDepth;
             }
 
-            console.log("tree = " + JSON.stringify(tree))
             $('#tree').treeview({data: tree, showTags: true});
-            $('#tree').treeview('collapseAll', { silent: true });
+            if (!expandPattern) {
+                $('#tree').treeview('collapseAll', { silent: true });
+            }
             $('#tree').on('nodeSelected', function(event, data) {
               currentSubdir = data.subdir;
               loadSubdirIntoSelect(data.subdir);
@@ -115,7 +134,11 @@
         }
 
         function loadSubdirIntoSelect(subdir) {
-            loadFilesIntoSelect(dirTree[subdir]);
+            var files = [];
+            if (subdir) {
+                files = dirTree[subdir]
+            }
+            loadFilesIntoSelect(files);
         }
 
         function loadFilesIntoSelect(files) {
@@ -138,13 +161,18 @@
 
         function filterDirs(filterText) {
             if (filterText.length > 0) {
-                $("#tree").treeview('search', [filterText, {
-                    ignoreCase: true,     // case insensitive
-                    exactMatch: false,    // like or equals
-                    revealResults: true,
-                }]);
+                var filteredDirs = [];
+                var searchRegex = new RegExp(filterText, "i");
+                for (var i = 0; i < dirList.length; i++) {
+                    var filename = dirList[i];
+                    var result = filename.search(searchRegex);
+                    if (result !== -1) {
+                        filteredDirs.push(dirList[i]);
+                    }
+                }
+                loadTOC(filteredDirs, filterText);
             } else {
-                $("#tree").treeview('clearSearch');
+                loadTOC(dirList);
             }
         }
 
@@ -156,11 +184,15 @@
 
             var filteredFiles = [];
             var searchRegex = new RegExp(filterText, "i");
-            for (var i = 0; i < dirTree[currentSubdir].length; i++) {
-                var filename = dirTree[currentSubdir][i].split(/[/]/).pop();
-                var result = filename.search(searchRegex);
-                if (result !== -1) {
-                    filteredFiles.push(filename);
+
+            for (var i = 0; i < dirList.length; i++) {
+                var dirFiles = dirTree[dirList[i]];
+                for (var j = 0; j < dirFiles.length; j++) {
+                    var filename = dirFiles[j].split(/[/]/).pop();
+                    var result = filename.search(searchRegex);
+                    if (result !== -1) {
+                        filteredFiles.push(dirFiles[j]);
+                    }
                 }
             }
 
@@ -175,12 +207,12 @@
 <body onload="javascript:callPython('getFilesInEpubsDir', null, loadDirectory);">
     <div class="row">
         <div class="col-md-4">
-            <label for="dirFilter">Filter</label>
+            <label for="dirFilter">Search Categories</label>
             <input type="text" id="dirFilter" class="form-control" value="" oninput="javascript:filterDirs(this.value)"/>
         </div>
 
         <div class="col-md-8">
-            <label for="filter">Filter</label>
+            <label for="filter">Search All Files</label>
             <input type="text" id="filter" class="form-control" value="" oninput="javascript:filterFiles(this.value)"/>
         </div>
     </div>
