@@ -107,7 +107,11 @@
                 if (thisDepth > depth && previousNode) {
                     parentNodes.push(previousNode);
                 } else if (thisDepth < depth) {
-                    parentNodes.pop();
+                    // go back up the tree as many dirs as necessary
+                    var diff = depth - thisDepth;
+                    for (var k = 0; k < diff; k++) {
+                        parentNodes.pop();
+                    }
                 }
 
                 if (parentNodes.length > 0) {
@@ -133,10 +137,7 @@
         }
 
         function loadSubdirIntoSelect(subdir) {
-            var files = [];
-            if (subdir) {
-                files = dirTree[subdir]
-            }
+            var files = dirTree[subdir]
             $('#filter').val('');
             loadFilesIntoSelect(files);
         }
