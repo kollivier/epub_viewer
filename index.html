@@ -162,7 +162,7 @@
 
         function filterDirs(filterText) {
             if (filterText.length > 0) {
-                var filteredDirs = [];
+                var filteredDirs = [''];
                 var searchRegex = new RegExp(filterText, "i");
                 for (var i = 0; i < dirList.length; i++) {
                     var filename = dirList[i];
