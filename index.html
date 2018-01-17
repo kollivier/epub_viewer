@@ -125,6 +125,12 @@
                     parentNodes.push(thisNode);
                 }
 
+                if (expanded) {
+                    for (var y = 0; y < parentNodes.length; y++) {
+                        parentNodes[y].state.expanded = true;
+                    }
+                }
+
                 previousNode = thisNode;
                 depth = thisDepth;
             }
@@ -169,8 +175,19 @@
                     var result = filename.search(searchRegex);
                     if (result !== -1) {
                         filteredDirs.push(dirList[i]);
+                        var parentDirs = filename.split(/[/]/);
+                        var parentDir = '';
+                        for (var y = 0; y < parentDirs.length; y++) {
+                            parentDir += parentDirs[y];
+                            if (filteredDirs.indexOf(parentDir) === -1) {
+                                filteredDirs.push(parentDir);
+                            }
+
+                            parentDir += '/';
+                        }
                     }
                 }
+                filteredDirs.sort();
                 loadTOC(filteredDirs, filterText);
             } else {
                 loadTOC(dirList);
