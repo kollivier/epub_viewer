@@ -70,6 +70,7 @@
 
             for (var i = 0; i < dirs.length; i++) {
                 var expanded = false;
+                var expandParents = false;
                 var dirName = subdir = dirs[i];
                 var thisDepth = 1;
                 if (dirName === '') {
@@ -84,10 +85,10 @@
                     dirName = dirName.split("/").pop();
                 }
 
-                if (expandPattern && !expanded) {
+                if (expandPattern && !expandParents) {
                     var searchRegex = new RegExp(expandPattern, "i");
                     if (dirName.search(searchRegex) != -1) {
-                        expanded = true;
+                        expandParents = true;
                     }
                 }
                 var thisNode = {
@@ -125,7 +126,7 @@
                     parentNodes.push(thisNode);
                 }
 
-                if (expanded) {
+                if (expandParents) {
                     for (var y = 0; y < parentNodes.length; y++) {
                         parentNodes[y].state.expanded = true;
                     }
