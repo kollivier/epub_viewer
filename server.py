@@ -67,7 +67,7 @@ def dir_listing():
         dir_tree[subdir].sort(key=lambda x: os.path.getmtime(x))
     print("All files = {}".format(dir_tree))
     dir_list = list(dir_tree.keys())
-    dir_list.sort()
+    dir_list.sort(key=lambda x: x.split("/"))
     data = {
         'dirname': epubsdir,
         'dir_list': dir_list,  # just for convenience
