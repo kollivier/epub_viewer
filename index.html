@@ -60,6 +60,20 @@
             }
         }
 
+        function sortTOC(nodes) {
+            nodes.sort(function (a, b) {
+                return a.text.localeCompare(b.text, undefined, {sensitivity: 'accent'})
+            });
+
+            for (var i = 0; i < nodes.length; i++) {
+                var node = nodes[i];
+                if (node.nodes && node.nodes.length > 0) {
+                    sortTOC(node.nodes);
+                }
+
+            }
+        }
+
         function loadTOC(dirs, expandPattern) {
             var tocHtml = '';
             console.log("dirs = " + JSON.stringify(dirs));
@@ -135,6 +149,8 @@
                 previousNode = thisNode;
                 depth = thisDepth;
             }
+
+            sortTOC(tree);
 
             $('#tree').treeview({data: tree, showTags: true});
             $('#tree').on('nodeSelected', function(event, data) {
