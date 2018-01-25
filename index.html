@@ -58,6 +58,15 @@
             if (fileFilter) {
                 filterFiles(fileFilter);
             }
+
+            if (window.performance && performance.navigation.type == 1) {
+                sessionStorage.clear();
+            } else {
+                var selectedNode = sessionStorage.getItem('selectedNode');
+                if (selectedNode) {
+                    $('#tree').treeview('selectNode', [ parseInt(selectedNode), { silent: false }]);
+                }
+            }
         }
 
         function sortTOC(nodes) {
@@ -155,6 +164,7 @@
             $('#tree').treeview({data: tree, showTags: true});
             $('#tree').on('nodeSelected', function(event, data) {
               currentSubdir = data.subdir;
+              sessionStorage.setItem('selectedNode', data.nodeId);
               loadSubdirIntoSelect(data.subdir);
             });
         }
