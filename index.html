@@ -26,6 +26,8 @@
         var currentSubdir = '';
         var dirTree = {};
         var dirList = [];
+        var tree = [];
+
         function callPython(methodName, data, callback) {
             var xmlhttp = new XMLHttpRequest();
             xmlhttp.onreadystatechange = function() {
@@ -41,6 +43,7 @@
             xmlhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
             xmlhttp.send(JSON.stringify(data));
         }
+
         function loadDirectory(data) {
             var dir = document.getElementById("directory");
             if (dir) {
@@ -59,14 +62,7 @@
                 filterFiles(fileFilter);
             }
 
-            if (window.performance && performance.navigation.type == 1) {
-                sessionStorage.clear();
-            } else {
-                var selectedNode = sessionStorage.getItem('selectedNode');
-                if (selectedNode) {
-                    $('#tree').treeview('selectNode', [ parseInt(selectedNode), { silent: false }]);
-                }
-            }
+
         }
 
         function sortTOC(nodes) {
@@ -87,9 +83,10 @@
             var tocHtml = '';
             console.log("dirs = " + JSON.stringify(dirs));
             var depth = 0;
-            var tree = [];
             var parentNodes = [];
             var previousNode = null;
+
+            tree = [];
 
             for (var i = 0; i < dirs.length; i++) {
                 var expanded = false;
@@ -160,11 +157,13 @@
             }
 
             sortTOC(tree);
+            loadTreeData(tree);
+        }
 
+        function loadTreeData(tree) {
             $('#tree').treeview({data: tree, showTags: true});
             $('#tree').on('nodeSelected', function(event, data) {
               currentSubdir = data.subdir;
-              sessionStorage.setItem('selectedNode', data.nodeId);
               loadSubdirIntoSelect(data.subdir);
             });
         }
@@ -244,12 +243,23 @@
             loadFilesIntoSelect(filteredFiles);
         }
 
+        function pageLoaded() {
+            var tree = sessionStorage.getItem('treeData');
+            if (window.performance && performance.navigation.type == 1 || !tree) {
+                sessionStorage.clear();
+                callPython('getFilesInEpubsDir', null, loadDirectory);
+            } else {
+                loadTreeData(tree);
+            }
+        }
+
         function loadEPub(data) {
+            sessionStorage.setItem('treeData', tree);
             window.location.href = server_url + data['toc'];
         }
     </script>
 </head>
-<body onload="javascript:callPython('getFilesInEpubsDir', null, loadDirectory);">
+<body onload="javascript:pageLoaded()">
     <div class="row">
         <div class="col-md-4">
             <label for="dirFilter">Search Categories</label>
