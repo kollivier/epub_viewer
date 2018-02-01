@@ -245,7 +245,7 @@
         }
 
         function pageLoaded() {
-            var tree = sessionStorage.getItem('treeData');
+            var tree = JSON.parse(sessionStorage.getItem('treeData'));
             if (window.performance && performance.navigation.type == 1 || !tree) {
                 sessionStorage.clear();
                 callPython('getFilesInEpubsDir', null, loadDirectory);
@@ -255,7 +255,7 @@
         }
 
         function loadEPub(data) {
-            sessionStorage.setItem('treeData', tree);
+            sessionStorage.setItem('treeData', JSON.stringify(tree));
             window.location.href = server_url + data['toc'];
         }
     </script>
